@@ -58,7 +58,7 @@ class VisdomController():
         fake_data_1 = synthesize_data(gen_nn, batch_size, noise_function).detach().cpu().numpy()[:,f_idx_1]
         data = np.array([fake_data_0,fake_data_1]).T
         
-        plot_win = str(f_idx_0 + f_idx_1) + "_fake_comp_window"
+        plot_win = str(f_idx_0) + str(f_idx_1) + "_fake_comp_window"
         title = "fake features : " + str(f_idx_0) + " vs " + str(f_idx_1)
         env = "feature_comparison"
         
@@ -74,7 +74,7 @@ class VisdomController():
         rows = np.random.choice(np.arange(0,real_data.shape[0]), size=num_samples, replace=False)
         data = real_data.detach().cpu().numpy()[:,[f_idx_0, f_idx_1]][rows,:]
         
-        plot_win = str(f_idx_0 + f_idx_1) + "_real_comp_window"
+        plot_win = str(f_idx_0) + str(f_idx_1) + "_real_comp_window"
         title = "real features : " + str(f_idx_0) + " vs " + str(f_idx_1)
         env = "feature_comparison"
         
