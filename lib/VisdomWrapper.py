@@ -41,6 +41,9 @@ class VisdomController():
     # Custom Plots    
         
     def PlotLoss(self, key, epoch, loss):
+        if not self.IsConnected():
+            return
+
         plot_win = "loss_window"
         if plot_win not in self.plots:
             self.CreateLinePlot(epoch, loss, "Loss Graph", "Epoch", "Loss", plot_win, key)

@@ -2,3 +2,5 @@
 .ipynb_checkpoints/
 /input
 /lib/__pycache__
+lib/__pycache__/VisdomWrapper.cpython-37.pyc
+lib/__pycache__/GANs.cpython-37.pyc
