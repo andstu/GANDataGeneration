@@ -46,7 +46,7 @@ class VisdomController():
 
         plot_win = "loss_window"
         if plot_win not in self.plots:
-            self.CreateLinePlot(epoch, loss, "Loss Graph", "Epoch", "Loss", plot_win, key)
+            self.CreateLinePlot(epoch, loss, "Loss Graph", "T", "Loss", plot_win, key)
         else:
             self.UpdateLinePlot(epoch, loss, plot_win, key)
             
