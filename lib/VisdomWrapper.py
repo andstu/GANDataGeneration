@@ -23,6 +23,16 @@ class VisdomController():
                 legend=[key],
                 showlegend=True
             ))
+
+    def CreateStaticLinePlot(self, x, y, title, xlabel, ylabel, win, key, env="main"):
+        self.plots[win] = self.vis.line(X=x, Y=y, env = env, opts=dict(
+            title=title,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            win=win,
+            legend=[key],
+            showlegend=True
+        ))
             
     def CreateScatterPlot(self, data, title, xlabel, ylabel, win, env="main"):
         self.plots[win] = self.vis.scatter(data, env = env, opts=dict(
