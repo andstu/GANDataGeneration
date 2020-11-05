@@ -13,34 +13,36 @@ class DiscriminatorNetwork(torch.nn.Module):
         super(DiscriminatorNetwork, self).__init__()
         self.n_input_features = num_input_features
 
-#         self.hidden0 = nn.Sequential(
-#             nn.Linear(num_input_features, 256),
-#             nn.LeakyReLU(0.2),
-#             nn.Dropout(0.3)
-#         )
-        
-#         self.hidden1 = nn.Sequential(
-#             nn.Linear(256, 128),
-#             nn.LeakyReLU(0.2),
-#             nn.Dropout(0.3)
-#         )
-        
-#         self.hidden2 = nn.Sequential(
-#             nn.Linear(128, 64),
-#             nn.LeakyReLU(0.2),
-#             nn.Dropout(0.3)
-#         )
-        
-#         self.hidden3 = nn.Sequential(
-#             nn.Linear(64,32),
-#             nn.LeakyReLU(0.2),
-#             nn.Dropout(0.3)
-#         )
-        
-        self.hidden4 = nn.Sequential(
-            nn.Linear(num_input_features, 16),
+        self.hidden0 = nn.Sequential(
+            nn.Linear(num_input_features, 256),
             nn.LeakyReLU(0.2),
             nn.Dropout(0.3)
+        )
+        
+        self.hidden1 = nn.Sequential(
+            nn.Linear(256, 128),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.3)
+        )
+        
+        self.hidden2 = nn.Sequential(
+            nn.Linear(128, 64),
+            nn.LeakyReLU(0.2),
+            nn.Dropout(0.3)
+        )
+        
+        self.hidden3 = nn.Sequential(
+            nn.Linear(64,32),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(32),
+            nn.Dropout(0.3)
+        )
+        
+        self.hidden4 = nn.Sequential(
+            nn.Linear(32, 16),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(16),
+            nn.Dropout(0.25)
         )
         
         self.out = nn.Sequential(
@@ -49,10 +51,10 @@ class DiscriminatorNetwork(torch.nn.Module):
         )
     
     def forward(self, x):
-#         x  = self.hidden0(x)
-#         x = self.hidden1(x)
-#         x = self.hidden2(x)
-#         x = self.hidden3(x)
+        x  = self.hidden0(x)
+        x = self.hidden1(x)
+        x = self.hidden2(x)
+        x = self.hidden3(x)
         x = self.hidden4(x)
         x = self.out(x)
         return x
@@ -64,25 +66,25 @@ class GeneratorNetwork(torch.nn.Module):
         self.num_input_features = num_input_features
         self.num_output_features = num_output_features
 
-#         self.hidden0 = nn.Sequential(
-#             nn.Linear(num_noise_features, 128),
-#             nn.LeakyReLU(0.2),
-#             nn.Dropout(0.5),
-#             nn.BatchNorm1d(128)
-#         )
-        
-#         self.hidden1 = nn.Sequential(
-#             nn.Linear(128, 64),
-#             nn.LeakyReLU(0.2),
-#             nn.Dropout(0.5),
-#             nn.BatchNorm1d(64)
-#         )
-        
-        self.hidden2 = nn.Sequential(
-            nn.Linear(num_input_features, 32),
+        self.hidden0 = nn.Sequential(
+            nn.Linear(num_input_features, 128),
             nn.LeakyReLU(0.2),
             nn.Dropout(0.5),
-            nn.BatchNorm1d(32)
+            nn.BatchNorm1d(128)
+        )
+        
+        self.hidden1 = nn.Sequential(
+            nn.Linear(128, 64),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(64),
+            nn.Dropout(0.3)
+        )
+        
+        self.hidden2 = nn.Sequential(
+            nn.Linear(64, 32),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(32),
+            nn.Dropout(0.3)
         )
         
         self.out = nn.Sequential(
@@ -91,8 +93,8 @@ class GeneratorNetwork(torch.nn.Module):
         )
     
     def forward(self, x):
-#         x  = self.hidden0(x)
-#         x = self.hidden1(x)
+        x  = self.hidden0(x)
+        x = self.hidden1(x)
         x = self.hidden2(x)
         x = self.out(x)
         return x
@@ -101,16 +103,17 @@ class GeneratorNetwork(torch.nn.Module):
 
     
 # Training Functions
-def train_discriminator(discr_nn, discr_optimizer, loss, gen_nn, real_data, noise_function):
-    discr_optimizer.zero_grad()
-    
+def train_discriminator(discr_nn, discr_optimizer, loss, gen_nn, real_data, noise_function):    
     # Makes Fake Data    
     batch_size = real_data.size(0)
     fake_data = synthesize_data(gen_nn, batch_size, noise_function)
+
+    # Zero Grad
+    discr_optimizer.zero_grad()
+
     
     # Prediction On Fake Data     
     fake_discr_pred = discr_nn(fake_data)
-    test = fake_target(batch_size)
     fake_loss = loss(fake_discr_pred, fake_target(batch_size))
     fake_loss.backward()
     
@@ -124,16 +127,18 @@ def train_discriminator(discr_nn, discr_optimizer, loss, gen_nn, real_data, nois
     return fake_loss + real_loss
 
 def train_generator(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_function):
-    gen_optimizer.zero_grad()
-    
     # Makes Fake Data
     batch_size = real_data.size(0)
     fake_data = synthesize_data(gen_nn, batch_size, noise_function)
+
+    # Zero Grad
+    gen_optimizer.zero_grad()
     
     # Prediction On Fake Data     
     fake_discr_pred = discr_nn(fake_data)
     gen_loss = loss(fake_discr_pred, real_target(batch_size)) # Maximizing as opposed to minimizeing
     gen_loss.backward()
+    # print("gen_loss loss", gen_loss.grad)
     
     gen_optimizer.step()
     
