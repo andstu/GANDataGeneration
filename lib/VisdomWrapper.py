@@ -82,4 +82,21 @@ class VisdomController():
             self.CreateScatterPlot(data, title, str(f_idx_0), str(f_idx_1), plot_win, env)
         else:
             self.UpdateScatterPlot(data, plot_win, env)
+
+    def PlotHeatMap(self, matrix, key, make_lower_triange):
+        plot_win = key
+        matrix = matrix.to_numpy()
+        if make_lower_triange:
+            matrix[np.tril_indices_from(matrix)] = 0
+
+        if plot_win not in self.plots:
+            self.plots[plot_win] = self.vis.heatmap(
+                X=matrix
+            )
+        else:
+            self.vis.heatmap(
+                X=matrix,
+                win=self.plots[plot_win]
+            )
+            
         
