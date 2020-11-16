@@ -12,37 +12,47 @@ class DiscriminatorNetwork(torch.nn.Module):
     def __init__(self, num_input_features):
         super(DiscriminatorNetwork, self).__init__()
         self.n_input_features = num_input_features
-
+        
         self.hidden0 = nn.Sequential(
-            nn.Linear(num_input_features, 256),
+            nn.Linear(num_input_features, 32),
             nn.LeakyReLU(0.2),
-            nn.Dropout(0.3)
+            nn.BatchNorm1d(32)
         )
-        
+
         self.hidden1 = nn.Sequential(
-            nn.Linear(256, 128),
+            nn.Linear(32,64),
             nn.LeakyReLU(0.2),
-            nn.Dropout(0.3)
+            nn.BatchNorm1d(64)
         )
-        
+
         self.hidden2 = nn.Sequential(
-            nn.Linear(128, 64),
+            nn.Linear(64,128),
             nn.LeakyReLU(0.2),
-            nn.Dropout(0.3)
+            nn.BatchNorm1d(128)
         )
         
         self.hidden3 = nn.Sequential(
+            nn.Linear(128,64),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(64)
+        )
+
+        self.hidden4 = nn.Sequential(
             nn.Linear(64,32),
             nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(32),
-            nn.Dropout(0.3)
+            nn.BatchNorm1d(32)
         )
-        
-        self.hidden4 = nn.Sequential(
-            nn.Linear(32, 16),
+
+        self.hidden5 = nn.Sequential(
+            nn.Linear(32,32),
             nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(16),
-            nn.Dropout(0.25)
+            nn.BatchNorm1d(32)
+        )
+
+        self.hidden6 = nn.Sequential(
+            nn.Linear(32,16),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(16)
         )
         
         self.out = nn.Sequential(
@@ -56,6 +66,8 @@ class DiscriminatorNetwork(torch.nn.Module):
         x = self.hidden2(x)
         x = self.hidden3(x)
         x = self.hidden4(x)
+        x = self.hidden5(x)
+        x = self.hidden6(x)
         x = self.out(x)
         return x
 
@@ -69,19 +81,47 @@ class GeneratorNetwork(torch.nn.Module):
         self.hidden0 = nn.Sequential(
             nn.Linear(num_input_features, 128),
             nn.LeakyReLU(0.2),
-            nn.Dropout(0.5),
-            nn.BatchNorm1d(128)
+            nn.BatchNorm1d(128),
+            nn.Dropout(0.3)
         )
         
         self.hidden1 = nn.Sequential(
+            nn.Linear(128, 256),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(256),
+            nn.Dropout(0.3)
+        )
+
+        self.hidden2 = nn.Sequential(
+            nn.Linear(256, 128),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(128),
+            nn.Dropout(0.3)
+        )
+
+        self.hidden3 = nn.Sequential(
             nn.Linear(128, 64),
             nn.LeakyReLU(0.2),
             nn.BatchNorm1d(64),
             nn.Dropout(0.3)
         )
-        
-        self.hidden2 = nn.Sequential(
+
+        self.hidden4 = nn.Sequential(
+            nn.Linear(64, 64),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(64),
+            nn.Dropout(0.3)
+        )
+
+        self.hidden5 = nn.Sequential(
             nn.Linear(64, 32),
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(32),
+            nn.Dropout(0.3)
+        )
+
+        self.hidden6 = nn.Sequential(
+            nn.Linear(32, 32),
             nn.LeakyReLU(0.2),
             nn.BatchNorm1d(32),
             nn.Dropout(0.3)
@@ -96,6 +136,10 @@ class GeneratorNetwork(torch.nn.Module):
         x  = self.hidden0(x)
         x = self.hidden1(x)
         x = self.hidden2(x)
+        x = self.hidden3(x)
+        x = self.hidden4(x)
+        x = self.hidden5(x)
+        x = self.hidden6(x)
         x = self.out(x)
         return x
 
@@ -114,12 +158,12 @@ def train_discriminator(discr_nn, discr_optimizer, loss, gen_nn, real_data, nois
     
     # Prediction On Fake Data     
     fake_discr_pred = discr_nn(fake_data)
-    fake_loss = loss(fake_discr_pred, fake_target(batch_size))
+    fake_loss = loss(fake_discr_pred, fake_target(batch_size, 0.01))
     fake_loss.backward()
     
     # Prediction On Real Data     
     real_discr_pred = discr_nn(real_data)
-    real_loss = loss(real_discr_pred, real_target(batch_size))
+    real_loss = loss(real_discr_pred, real_target(batch_size, 0.01))
     real_loss.backward()
     
     discr_optimizer.step()
@@ -136,7 +180,7 @@ def train_generator(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_func
     
     # Prediction On Fake Data     
     fake_discr_pred = discr_nn(fake_data)
-    gen_loss = loss(fake_discr_pred, real_target(batch_size)) # Maximizing as opposed to minimizeing
+    gen_loss = loss(fake_discr_pred, real_target(batch_size, 0.01)) # Maximizing as opposed to minimizeing
     gen_loss.backward()
     # print("gen_loss loss", gen_loss.grad)
     

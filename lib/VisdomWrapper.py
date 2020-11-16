@@ -6,13 +6,14 @@ from lib.DataCreationWrapper import *
 class VisdomController():
     def __init__(self):
         self.vis = Visdom()
+        self.connected = self.vis.check_connection()
         self.plots = {}
         
     def ClearPlots(self):
         self.plots = {}
         
     def IsConnected(self):
-        return self.vis.check_connection()
+        return self.connected
         
     def CreateLinePlot(self, x, y, title, xlabel, ylabel, win, key, env="main"):
             self.plots[win] = self.vis.line(X=np.array([x,x]), Y=np.array([y,y]), env = env, opts=dict(
@@ -94,6 +95,9 @@ class VisdomController():
             self.UpdateScatterPlot(data, plot_win, env)
 
     def PlotHeatMap(self, matrix, key, make_lower_triange):
+        if not self.IsConnected():
+            return
+
         plot_win = key
         matrix = matrix.to_numpy()
         if make_lower_triange:

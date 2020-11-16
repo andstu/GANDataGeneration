@@ -2,14 +2,14 @@ import torch
 from torch.autograd.variable import Variable
 
 # TARGET FUNCTIONS
-def real_target(size):
-    target = Variable(torch.ones(size, 1))
+def real_target(size, epsilon = 0):
+    target = Variable(torch.ones(size, 1) - epsilon)
     if torch.cuda.is_available():
         return target.cuda()
     return target
 
-def fake_target(size):
-    target = Variable(torch.zeros(size, 1))
+def fake_target(size, epsilon = 0):
+    target = Variable(torch.zeros(size, 1) + epsilon)
     if torch.cuda.is_available():
         return target.cuda()
     return target
