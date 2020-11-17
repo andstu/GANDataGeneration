@@ -17,6 +17,7 @@ class DiscriminatorNetwork(torch.nn.Module):
             return nn.Sequential(
             nn.Linear(input_size, output_size),
             nn.LeakyReLU(0.2),
+            nn.Dropout(0.3)
         )  
         
         # self.hidden0 = nn.Sequential(
@@ -30,8 +31,9 @@ class DiscriminatorNetwork(torch.nn.Module):
         self.preprocess = nn.Sequential(
             nn.Flatten()
         )
-        self.hidden0 = block(num_input_features + num_classes, 256)
-        self.hidden1 = block(256, 256)
+        self.hidden0 = block(num_input_features + num_classes, 1024)
+        self.hidden1 = block(1024, 512)
+        self.hidden2 = block(512, 256)
 
         self.out = nn.Sequential(
             nn.Linear(256, 1),
@@ -43,6 +45,7 @@ class DiscriminatorNetwork(torch.nn.Module):
         x = torch.cat((x,self.label_embedding(labels)),-1)
         x = self.hidden0(x)
         x = self.hidden1(x)
+        x = self.hidden2(x)
         x = self.out(x)
         return x
 
@@ -56,7 +59,7 @@ class GeneratorNetwork(torch.nn.Module):
         def block(input_size, output_size):
             return nn.Sequential(
             nn.Linear(input_size, output_size),
-            nn.LeakyReLU(0.2),
+            nn.LeakyReLU(0.2)
         )
 
         # self.hidden0 = nn.Sequential(
@@ -68,8 +71,10 @@ class GeneratorNetwork(torch.nn.Module):
 
         self.label_embedding = nn.Embedding(num_classes, num_classes)
 
-        self.hidden0 = block(num_input_features + num_classes, 1024)
-        self.hidden1 = block(1024, 1024)
+        self.hidden0 = block(num_input_features + num_classes, 256)
+        self.hidden1 = block(256, 512)
+        self.hidden2 = block(512, 1024)
+
         
         self.out = nn.Sequential(
             nn.Linear(1024, num_output_features),
@@ -79,6 +84,8 @@ class GeneratorNetwork(torch.nn.Module):
     def forward(self, x, labels):
         x = torch.cat((x,self.label_embedding(labels)),-1)
         x  = self.hidden0(x)
+        x  = self.hidden1(x)
+        x  = self.hidden2(x)
         x = self.out(x)
         return x
 
