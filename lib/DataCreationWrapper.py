@@ -34,3 +34,30 @@ def synthesize_data(gen_nn, batch_size, noise_function):
     noise = noise_function(batch_size, gen_nn.num_input_features)
     fake_data = gen_nn(noise)
     return fake_data
+
+def synthesize_data_and_labels(gen_nn, batch_size, noise_function, n_classes):
+    noise = noise_function(batch_size, gen_nn.num_input_features)
+    labels = torch.randint(0,n_classes, (batch_size,))
+    if torch.cuda.is_available():
+        labels = labels.cuda()
+
+    fake_data = gen_nn(noise, labels)
+    return fake_data, labels
+
+def synthesize_data_from_label(gen_nn, batch_size, noise_function, label):
+    noise = noise_function(batch_size, gen_nn.num_input_features)
+    labels = torch.full((batch_size,), label)
+    if torch.cuda.is_available():
+        labels = labels.cuda()
+
+    fake_data = gen_nn(noise, labels)
+    return fake_data
+
+def synthesize_data_from_each_label(gen_nn, noise_function, n_classes):
+    noise = noise_function(n_classes, gen_nn.num_input_features)
+    labels = torch.arange(n_classes)
+    if torch.cuda.is_available():
+        labels = labels.cuda()
+
+    fake_data = gen_nn(noise, labels)
+    return fake_data

@@ -62,12 +62,12 @@ class VisdomController():
         else:
             self.UpdateLinePlot(self.loss_axis, loss, plot_win, key)
             
-    def PlotFakeFeatureDistributionComparison(self, f_idx_0, f_idx_1, gen_nn, batch_size, noise_function):
+    def PlotFakeFeatureDistributionComparison(self, f_idx_0, f_idx_1, gen_nn, batch_size, noise_function, class_to_mimic):
         if not self.IsConnected():
             return
         
-        fake_data_0 = synthesize_data(gen_nn, batch_size, noise_function).detach().cpu().numpy()[:,f_idx_0]
-        fake_data_1 = synthesize_data(gen_nn, batch_size, noise_function).detach().cpu().numpy()[:,f_idx_1]
+        fake_data_0 = synthesize_data_from_label(gen_nn, batch_size, noise_function, class_to_mimic).detach().cpu().numpy()[:,f_idx_0]
+        fake_data_1 = synthesize_data_from_label(gen_nn, batch_size, noise_function, class_to_mimic).detach().cpu().numpy()[:,f_idx_1]
         data = np.array([fake_data_0,fake_data_1]).T
         
         plot_win = str(f_idx_0) + str(f_idx_1) + "_fake_comp_window"
