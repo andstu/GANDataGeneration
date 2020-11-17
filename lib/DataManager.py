@@ -16,7 +16,7 @@ def get_unbalanced_mnist(class_weights, batch_size=100):
     sampler = WeightedRandomSampler(samples_weight, len(samples_weight))
     batch_sampler = BatchSampler(sampler, batch_size, False)
 
-    return DataLoader(mnist, batch_size=batch_size, sampler=sampler, shuffle=True)
+    return DataLoader(mnist, batch_size=batch_size, sampler=sampler)
 
 def format_to_image(imgs, num_imgs, width):
     result = imgs.reshape(num_imgs,width,width)
