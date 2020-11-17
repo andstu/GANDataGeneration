@@ -187,3 +187,43 @@ def train_generator(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_func
     gen_optimizer.step()
     
     return gen_loss
+
+def train_discriminator_wass(discr_nn, discr_optimizer, loss, gen_nn, real_data, noise_function):
+    # Zero Grad
+    discr_optimizer.zero_grad()
+    
+    # Makes Fake Data    
+    batch_size = real_data.size(0)
+    fake_data = synthesize_data(gen_nn, batch_size, noise_function)
+    
+    # Prediction on Fake Data
+    prediction_fake = discr_nn(fake_data)
+    
+    # Prediction on Real Data
+    prediction_real = discr_nn(real_data)
+    
+    real_loss = - torch.mean(prediction_real)
+    fake_loss = torch.mean(prediction_fake)
+    
+    loss = real_loss + fake_loss
+    loss.backward()
+    discr_optimizer.step()
+    
+    return real_loss, fake_loss
+
+def train_generator_wass(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_function):
+    # Zero Grad
+    gen_optimizer.zero_grad()
+    
+    # Makes Fake Data
+    batch_size = real_data.size(0)
+    fake_data = synthesize_data(gen_nn, batch_size, noise_function)
+        
+    # Prediction on Fake Data
+    prediction_fake = discr_nn(fake_data)
+    
+    loss = - torch.mean(prediction_fake)
+    loss.backward()
+    gen_optimizer.step()
+    
+    return loss
