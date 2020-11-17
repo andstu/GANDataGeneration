@@ -93,7 +93,7 @@ class GeneratorNetwork(torch.nn.Module):
 
 class Conv_DiscriminatorNetwork(torch.nn.Module):
     def __init__(self, num_input_features, num_classes):
-        super(DiscriminatorNetwork, self).__init__()
+        super(Conv_DiscriminatorNetwork, self).__init__()
         self.n_input_features = num_input_features
 
         def block(input_size, output_size):
@@ -135,7 +135,7 @@ class Conv_DiscriminatorNetwork(torch.nn.Module):
 # Regular Generator Network    
 class Conv_GeneratorNetwork(torch.nn.Module):
     def __init__(self, num_input_features, num_output_features, num_classes):
-        super(GeneratorNetwork, self).__init__()
+        super(Conv_GeneratorNetwork, self).__init__()
         self.num_input_features = num_input_features
         self.num_output_features = num_output_features
 
