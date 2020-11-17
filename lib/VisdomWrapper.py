@@ -43,6 +43,14 @@ class VisdomController():
                 win=win
             ))
     
+    def CreateStaticBarPlot(self, x, y, title, xlabel, ylabel, win, env="main"):
+        self.plots[win] = self.vis.bar(X=x, Y=y, env=env, opts=dict(
+            title=title,
+            xlabel=xlabel,
+            ylabel=ylabel,
+            win=win
+        ))
+    
     def UpdateLinePlot(self, x, y, win, key, env="main"):
         self.vis.line(np.array([y]), X=np.array([x]), env = env, win=self.plots[win], name=key, update="append") 
         
@@ -100,7 +108,6 @@ class VisdomController():
             return
 
         plot_win = key
-        matrix = matrix.to_numpy()
         if make_lower_triange:
             matrix[np.tril_indices_from(matrix)] = 0
 
