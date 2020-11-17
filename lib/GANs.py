@@ -16,8 +16,8 @@ class DiscriminatorNetwork(torch.nn.Module):
         def block(input_size, output_size):
             return nn.Sequential(
             nn.Linear(input_size, output_size),
-            nn.LeakyReLU(0.2),
-            nn.Dropout(0.3)
+            nn.LeakyReLU(0.3),
+            nn.Dropout(0.2)
         )  
         
         # self.hidden0 = nn.Sequential(
@@ -59,6 +59,7 @@ class GeneratorNetwork(torch.nn.Module):
         def block(input_size, output_size):
             return nn.Sequential(
             nn.Linear(input_size, output_size),
+            nn.BatchNorm1d(output_size, momentum=0.8),
             nn.LeakyReLU(0.2)
         )
 
@@ -93,30 +94,31 @@ class GeneratorNetwork(torch.nn.Module):
 
     
 # Training Functions
-def train_discriminator(discr_nn, discr_optimizer, loss, gen_nn, real_data, noise_function, n_classes, labels):    
+def train_discriminator(discr_nn, discr_optimizer, loss, gen_nn, real_data, noise_function, n_classes, labels, real_target, fake_target):    
     # Makes Fake Data    
     batch_size = real_data.size(0)
     fake_data, fake_labels = synthesize_data_and_labels(gen_nn, batch_size, noise_function, n_classes)
 
     # Zero Grad
     discr_optimizer.zero_grad()
-
     
     # Prediction On Fake Data     
     fake_discr_pred = discr_nn(fake_data, fake_labels)
-    fake_loss = loss(fake_discr_pred, fake_target(batch_size, 0.01))
-    fake_loss.backward()
+    fake_loss = loss(fake_discr_pred, fake_target)
+    # fake_loss.backward()
     
     # Prediction On Real Data     
     real_discr_pred = discr_nn(real_data, labels)
-    real_loss = loss(real_discr_pred, real_target(batch_size, 0.01))
-    real_loss.backward()
-    
+    real_loss = loss(real_discr_pred, real_target)
+    # real_loss.backward()
+
+    loss = real_loss + fake_loss
+    loss.backward()
     discr_optimizer.step()
     
     return real_loss, fake_loss
 
-def train_generator(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_function, n_classes):
+def train_generator(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_function, n_classes, real_target):
     # Makes Fake Data
     batch_size = real_data.size(0)
     fake_data, fake_labels = synthesize_data_and_labels(gen_nn, batch_size, noise_function, n_classes)
@@ -126,7 +128,7 @@ def train_generator(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_func
     
     # Prediction On Fake Data     
     fake_discr_pred = discr_nn(fake_data, fake_labels)
-    gen_loss = loss(fake_discr_pred, real_target(batch_size, 0.01)) # Maximizing as opposed to minimizeing
+    gen_loss = loss(fake_discr_pred, real_target) # Maximizing as opposed to minimizeing
     gen_loss.backward()
     # print("gen_loss loss", gen_loss.grad)
     
@@ -134,43 +136,46 @@ def train_generator(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_func
     
     return gen_loss
 
-def train_discriminator_wass(discr_nn, discr_optimizer, loss, gen_nn, real_data, noise_function, n_classes, labels):
-    # Zero Grad
-    discr_optimizer.zero_grad()
-    
-    # Makes Fake Data    
-    batch_size = real_data.size(0)
-    fake_data, fake_labels = synthesize_data_and_labels(gen_nn, batch_size, noise_function, n_classes)
-    
-    # Prediction on Fake Data
-    prediction_fake = discr_nn(fake_data, fake_labels)
-    
-    # Prediction on Real Data
-    prediction_real = discr_nn(real_data, labels)
-    
-    real_loss = - torch.mean(prediction_real)
-    fake_loss = torch.mean(prediction_fake)
-    
-    loss = real_loss + fake_loss
-    loss.backward()
-    discr_optimizer.step()
-    
-    return real_loss, fake_loss
+def wasserstein_loss(pred,target):
+    return torch.mean(pred * target)
 
-def train_generator_wass(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_function, n_classes):
-    # Zero Grad
-    gen_optimizer.zero_grad()
+# def train_discriminator_wass(discr_nn, discr_optimizer, loss, gen_nn, real_data, noise_function, n_classes, labels):
+#     # Zero Grad
+#     discr_optimizer.zero_grad()
     
-    # Makes Fake Data
-    batch_size = real_data.size(0)
-    fake_data, fake_labels = synthesize_data_and_labels(gen_nn, batch_size, noise_function, n_classes)
-    # fake_data = synthesize_data(gen_nn, batch_size, noise_function)
+#     # Makes Fake Data    
+#     batch_size = real_data.size(0)
+#     fake_data, fake_labels = synthesize_data_and_labels(gen_nn, batch_size, noise_function, n_classes)
+    
+#     # Prediction on Fake Data
+#     prediction_fake = discr_nn(fake_data, fake_labels)
+    
+#     # Prediction on Real Data
+#     prediction_real = discr_nn(real_data, labels)
+    
+#     real_loss = - torch.mean(prediction_real)
+#     fake_loss = torch.mean(prediction_fake)
+    
+#     loss = real_loss + fake_loss
+#     loss.backward()
+#     discr_optimizer.step()
+    
+#     return real_loss, fake_loss
+
+# def train_generator_wass(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_function, n_classes):
+#     # Zero Grad
+#     gen_optimizer.zero_grad()
+    
+#     # Makes Fake Data
+#     batch_size = real_data.size(0)
+#     fake_data, fake_labels = synthesize_data_and_labels(gen_nn, batch_size, noise_function, n_classes)
+#     # fake_data = synthesize_data(gen_nn, batch_size, noise_function)
         
-    # Prediction on Fake Data
-    prediction_fake = discr_nn(fake_data, fake_labels)
+#     # Prediction on Fake Data
+#     prediction_fake = discr_nn(fake_data, fake_labels)
     
-    loss = - torch.mean(prediction_fake)
-    loss.backward()
-    gen_optimizer.step()
+#     loss = - torch.mean(prediction_fake)
+#     loss.backward()
+#     gen_optimizer.step()
     
-    return loss
+#     return loss
