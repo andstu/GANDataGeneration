@@ -101,7 +101,7 @@ def train_discriminator(discr_nn, discr_optimizer, loss, gen_nn, real_data, nois
     
     discr_optimizer.step()
     
-    return fake_loss + real_loss
+    return real_loss, fake_loss
 
 def train_generator(gen_nn, gen_optimizer, loss, discr_nn, real_data, noise_function):
     # Makes Fake Data

@@ -113,5 +113,11 @@ class VisdomController():
                 X=matrix,
                 win=self.plots[plot_win]
             )
+
+    def ShowImages(self, imgs, caption):
+        self.vis.images(imgs.unsqueeze(1), opts=dict(
+            nrow=5,
+            caption=caption
+        ))
             
         
