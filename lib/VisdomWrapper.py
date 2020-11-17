@@ -51,15 +51,16 @@ class VisdomController():
 
     # Custom Plots    
         
-    def PlotLoss(self, key, epoch, loss):
+    def PlotLoss(self, key, loss):
         if not self.IsConnected():
             return
 
         plot_win = "loss_window"
         if plot_win not in self.plots:
-            self.CreateLinePlot(epoch, loss, "Loss Graph", "T", "Loss", plot_win, key)
+            self.loss_axis = 0
+            self.CreateLinePlot(self.loss_axis, loss, "Loss Graph", "T", "Loss", plot_win, key)
         else:
-            self.UpdateLinePlot(epoch, loss, plot_win, key)
+            self.UpdateLinePlot(self.loss_axis, loss, plot_win, key)
             
     def PlotFakeFeatureDistributionComparison(self, f_idx_0, f_idx_1, gen_nn, batch_size, noise_function):
         if not self.IsConnected():

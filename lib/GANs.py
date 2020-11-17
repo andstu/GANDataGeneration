@@ -12,62 +12,35 @@ class DiscriminatorNetwork(torch.nn.Module):
     def __init__(self, num_input_features):
         super(DiscriminatorNetwork, self).__init__()
         self.n_input_features = num_input_features
+
+        def block(input_size, output_size):
+            return nn.Sequential(
+            nn.Linear(input_size, output_size),
+            nn.LeakyReLU(0.2),
+        )
+
+        
+        
+        # self.hidden0 = nn.Sequential(
+        #     nn.Linear(num_input_features, 32),
+        #     nn.LeakyReLU(0.2),
+        #     nn.BatchNorm1d(32)
+        # )
         
         self.hidden0 = nn.Sequential(
-            nn.Linear(num_input_features, 32),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(32)
+            nn.Flatten()
         )
+        self.hidden1 = block(num_input_features, 256)
+        self.hidden2 = block(256, 256)
 
-        self.hidden1 = nn.Sequential(
-            nn.Linear(32,64),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(64)
-        )
-
-        self.hidden2 = nn.Sequential(
-            nn.Linear(64,128),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(128)
-        )
-        
-        self.hidden3 = nn.Sequential(
-            nn.Linear(128,64),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(64)
-        )
-
-        self.hidden4 = nn.Sequential(
-            nn.Linear(64,32),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(32)
-        )
-
-        self.hidden5 = nn.Sequential(
-            nn.Linear(32,32),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(32)
-        )
-
-        self.hidden6 = nn.Sequential(
-            nn.Linear(32,16),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(16)
-        )
-        
         self.out = nn.Sequential(
-            nn.Linear(16, 1),
+            nn.Linear(256, 1),
             nn.Sigmoid()
         )
     
     def forward(self, x):
         x  = self.hidden0(x)
-        x = self.hidden1(x)
-        x = self.hidden2(x)
-        x = self.hidden3(x)
-        x = self.hidden4(x)
-        x = self.hidden5(x)
-        x = self.hidden6(x)
+        x  = self.hidden1(x)
         x = self.out(x)
         return x
 
@@ -78,68 +51,28 @@ class GeneratorNetwork(torch.nn.Module):
         self.num_input_features = num_input_features
         self.num_output_features = num_output_features
 
-        self.hidden0 = nn.Sequential(
-            nn.Linear(num_input_features, 128),
+        def block(input_size, output_size):
+            return nn.Sequential(
+            nn.Linear(input_size, output_size),
             nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(128),
-            nn.Dropout(0.3)
-        )
-        
-        self.hidden1 = nn.Sequential(
-            nn.Linear(128, 256),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(256),
-            nn.Dropout(0.3)
         )
 
-        self.hidden2 = nn.Sequential(
-            nn.Linear(256, 128),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(128),
-            nn.Dropout(0.3)
-        )
-
-        self.hidden3 = nn.Sequential(
-            nn.Linear(128, 64),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(64),
-            nn.Dropout(0.3)
-        )
-
-        self.hidden4 = nn.Sequential(
-            nn.Linear(64, 64),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(64),
-            nn.Dropout(0.3)
-        )
-
-        self.hidden5 = nn.Sequential(
-            nn.Linear(64, 32),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(32),
-            nn.Dropout(0.3)
-        )
-
-        self.hidden6 = nn.Sequential(
-            nn.Linear(32, 32),
-            nn.LeakyReLU(0.2),
-            nn.BatchNorm1d(32),
-            nn.Dropout(0.3)
-        )
+        # self.hidden0 = nn.Sequential(
+        #     nn.Linear(num_input_features, 128),
+        #     nn.LeakyReLU(0.2),
+        #     nn.BatchNorm1d(128),
+        #     nn.Dropout(0.3)
+        # )
+        self.hidden0 = block(num_input_features, 1024)
+        self.hidden1 = block(1024, 1024)
         
         self.out = nn.Sequential(
-            nn.Linear(32, num_output_features),
+            nn.Linear(1024, num_output_features),
             nn.Tanh()
         )
     
     def forward(self, x):
         x  = self.hidden0(x)
-        x = self.hidden1(x)
-        x = self.hidden2(x)
-        x = self.hidden3(x)
-        x = self.hidden4(x)
-        x = self.hidden5(x)
-        x = self.hidden6(x)
         x = self.out(x)
         return x
 
