@@ -3,7 +3,7 @@ from torch.utils.data import DataLoader, WeightedRandomSampler, BatchSampler
 from torchvision import transforms, datasets
 import numpy as np
 
-def get_unbalanced_emnist(class_weights, batch_size=100):
+def get_unbalanced_mnist(class_weights, batch_size=100):
     compose = transforms.Compose(
         [
             transforms.ToTensor(),
