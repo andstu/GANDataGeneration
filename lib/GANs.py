@@ -156,12 +156,14 @@ class Conv_GeneratorNetwork(torch.nn.Module):
         self.hidden0 = nn.Sequential(
             nn.ConvTranspose2d(129,64,4,stride=2,padding=1),
             nn.LeakyReLU(0.1),
-            nn.BatchNorm2d(64)
+            nn.BatchNorm2d(64),
+            nn.Dropout(0.25)
         )
 
         self.hidden1 = nn.Sequential(
             nn.ConvTranspose2d(64,1,4,stride=2,padding=1),
-            nn.LeakyReLU(0.1)
+            nn.LeakyReLU(0.1),
+            nn.Dropout(0.25)
         )
         
         self.out = nn.Sequential(
