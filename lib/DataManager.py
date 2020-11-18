@@ -49,3 +49,15 @@ def get_sample(data_loader, num_samples, class_to_mimic, feature_0, feature_1):
             break
 
     return torch.reshape(result, (n_class_imgs, -1))
+
+def data_loader_to_tensor(data_loader):
+    X = None
+    Y = None
+    for x, y in data_loader:
+        if X is None:
+            X = x
+            Y = y
+        else:
+            X = torch.cat(X, x)
+            Y = torch.cat(Y, y)
+    return X, Y
