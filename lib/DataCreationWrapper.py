@@ -69,9 +69,3 @@ def synthesize_data_from_each_label(gen_nn, noise_function, n_classes):
 
     fake_data = gen_nn(noise, labels)
     return fake_data
-
-# def get_embeddings(gen_nn, n_classes):
-#     labels = torch.arange(n_classes)
-#     if torch.cuda.is_available():
-#         labels = labels.cuda()
-#     return gen_nn.label_embedding(labels)
