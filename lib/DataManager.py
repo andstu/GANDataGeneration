@@ -58,6 +58,6 @@ def data_loader_to_tensor(data_loader):
             X = x
             Y = y
         else:
-            X = torch.cat(X, x)
-            Y = torch.cat(Y, y)
+            X = torch.cat((X, x))
+            Y = torch.cat((Y, y))
     return X, Y
