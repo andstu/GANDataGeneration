@@ -105,8 +105,8 @@ class Conv_DiscriminatorNetwork(torch.nn.Module):
         )  
    
         self.label_embedding = nn.Sequential(
-            nn.Embedding(num_classes, num_classes),
-            nn.Linear(num_classes,num_input_features),
+            nn.Embedding(num_classes, 50),
+            nn.Linear(50,num_input_features),
             nn.LeakyReLU(0.2)
         )
 
@@ -115,8 +115,6 @@ class Conv_DiscriminatorNetwork(torch.nn.Module):
 
         self.out = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(4*4*64, 4*4*64),
-            nn.LeakyReLU(0.1),
             nn.Linear(4*4*64, 1),
             nn.Sigmoid()
         )
@@ -143,16 +141,16 @@ class Conv_GeneratorNetwork(torch.nn.Module):
         self.input_channels = 128
 
         self.label_embedding = nn.Sequential(
-            nn.Embedding(num_classes, num_classes),
-            nn.Linear(num_classes, self.input_width ** 2),
+            nn.Embedding(num_classes, 50),
+            nn.Linear(50, self.input_width ** 2),
             nn.LeakyReLU(0.2)
         )
 
         self.process_noise = nn.Sequential(
-            nn.Linear(num_input_features, 1024),
-            nn.LeakyReLU(0.1),
-            nn.BatchNorm1d(1024),
-            nn.Linear(1024, self.input_channels * (self.input_width ** 2))
+            nn.Linear(num_input_features, self.input_channels * (self.input_width ** 2)),
+            nn.LeakyReLU(0.1)
+            # nn.BatchNorm1d(1024),
+            # nn.Linear(1024, self.input_channels * (self.input_width ** 2))
         )
 
         self.hidden0 = nn.Sequential(
