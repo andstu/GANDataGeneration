@@ -18,6 +18,15 @@ def get_unbalanced_mnist(class_weights, batch_size=100):
 
     return DataLoader(mnist, batch_size=batch_size, sampler=sampler)
 
+# NOISE TRANSFORMS
+class AddNormalNoise(object):
+    def __init__(self, mean=0, std=1):
+        self.std = std
+        self.mean = mean
+
+    def __call__(self, sample):
+        return sample + sample.randn(sample.size()) * self.std + self.mean
+
 def format_to_image(imgs, num_imgs, width):
     result = imgs.reshape(num_imgs,width,width)
     result = (result + 1) / 2
