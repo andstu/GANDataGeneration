@@ -1,6 +1,7 @@
 import torch
 from torch import nn
 from lib.DataCreationWrapper import *
+import numpy as np
 
 # References
 # https://github.com/soumith/ganhacks <-- real useful
@@ -94,84 +95,91 @@ class GeneratorNetwork(torch.nn.Module):
 class Conv_DiscriminatorNetwork(torch.nn.Module):
     def __init__(self, num_input_features, num_classes):
         super(Conv_DiscriminatorNetwork, self).__init__()
-        self.n_input_features = num_input_features
+        self.width = int(np.sqrt(num_input_features))
 
-        def block(input_size, output_size):
+        def block(input_channels, output_channels, filter_size, stride, pooling_size=2, pooling_stride=2):
             return nn.Sequential(
-            nn.Linear(input_size, output_size),
-            nn.LeakyReLU(0.3),
-            nn.Dropout(0.2)
+            nn.Conv2d(input_channels, output_channels, filter_size, stride=stride),
+            nn.LeakyReLU(0.1),
+            nn.MaxPool2d(pooling_size, stride=pooling_stride)
         )  
-        
-        # self.hidden0 = nn.Sequential(
-        #     nn.Linear(num_input_features, 32),
-        #     nn.LeakyReLU(0.2),
-        #     nn.BatchNorm1d(32)
-        # )
-
-        self.label_embedding = nn.Embedding(num_classes, num_classes)
-        
-        self.preprocess = nn.Sequential(
-            nn.Flatten()
+   
+        self.label_embedding = nn.Sequential(
+            nn.Embedding(num_classes, num_classes),
+            nn.Linear(num_classes,num_input_features),
+            nn.LeakyReLU(0.2)
         )
-        self.hidden0 = block(num_input_features + num_classes, 1024)
-        self.hidden1 = block(1024, 512)
-        self.hidden2 = block(512, 256)
+
+        self.hidden0 = block(2,32, 5, 1)
+        self.hidden1 = block(32,64, 5, 1)
 
         self.out = nn.Sequential(
-            nn.Linear(256, 1),
+            nn.Flatten(),
+            nn.Linear(4*4*64, 4*4*64),
+            nn.LeakyReLU(0.1),
+            nn.Linear(4*4*64, 1),
             nn.Sigmoid()
         )
     
     def forward(self, x, labels):
-        x = self.preprocess(x)
-        x = torch.cat((x,self.label_embedding(labels)),-1)
+        x = torch.cat((x,self.get_label_embeddings(labels)),1)
         x = self.hidden0(x)
         x = self.hidden1(x)
-        x = self.hidden2(x)
         x = self.out(x)
         return x
 
-# Regular Generator Network    
+    def get_label_embeddings(self, labels):
+        return self.label_embedding(labels).view(len(labels), 1, self.width, self.width)
+
+# Regular Generator Network
+#InfoGan
 class Conv_GeneratorNetwork(torch.nn.Module):
     def __init__(self, num_input_features, num_output_features, num_classes):
         super(Conv_GeneratorNetwork, self).__init__()
         self.num_input_features = num_input_features
         self.num_output_features = num_output_features
+        
+        self.input_width = 7
+        self.input_channels = 128
 
-        def block(input_size, output_size):
-            return nn.Sequential(
-            nn.Linear(input_size, output_size),
-            nn.BatchNorm1d(output_size, momentum=0.8),
+        self.label_embedding = nn.Sequential(
+            nn.Embedding(num_classes, num_classes),
+            nn.Linear(num_classes, self.input_width ** 2),
             nn.LeakyReLU(0.2)
         )
 
-        # self.hidden0 = nn.Sequential(
-        #     nn.Linear(num_input_features, 128),
-        #     nn.LeakyReLU(0.2),
-        #     nn.BatchNorm1d(128),
-        #     nn.Dropout(0.3)
-        # )
+        self.process_noise = nn.Sequential(
+            nn.Linear(num_input_features, 1024),
+            nn.LeakyReLU(0.1),
+            nn.BatchNorm1d(1024),
+            nn.Linear(1024, self.input_channels * (self.input_width ** 2))
+        )
 
-        self.label_embedding = nn.Embedding(num_classes, num_classes)
+        self.hidden0 = nn.Sequential(
+            nn.ConvTranspose2d(129,64,4,stride=2,padding=1),
+            nn.LeakyReLU(0.1),
+            nn.BatchNorm2d(64)
+        )
 
-        self.hidden0 = block(num_input_features + num_classes, 256)
-        self.hidden1 = block(256, 512)
-        self.hidden2 = block(512, 1024)
-
+        self.hidden1 = nn.Sequential(
+            nn.ConvTranspose2d(64,1,4,stride=2,padding=1),
+            nn.LeakyReLU(0.1)
+        )
         
         self.out = nn.Sequential(
-            nn.Linear(1024, num_output_features),
             nn.Tanh()
         )
     
     def forward(self, x, labels):
-        x = torch.cat((x,self.label_embedding(labels)),-1)
+        x = self.process_noise(x).view(len(labels), self.input_channels, self.input_width, self.input_width)
+        x = torch.cat((x,self.get_label_embeddings(labels)),1)
         x  = self.hidden0(x)
         x  = self.hidden1(x)
-        x  = self.hidden2(x)
         x = self.out(x)
         return x
+
+    def get_label_embeddings(self, labels):
+        return self.label_embedding(labels).view(len(labels), 1, self.input_width, self.input_width)
 
 
 
