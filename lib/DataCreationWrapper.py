@@ -47,6 +47,20 @@ def synthesize_data_from_label(gen_nn, batch_size, noise_function, label):
     fake_data = gen_nn(noise, labels)
     return fake_data
 
+def synthesize_data_of_each_label(gen_nn, noise_function, num_label):
+    synth_data, synth_labels = None, None
+    for i, num in enumerate(num_label):
+        if num <= 0:
+            continue
+        if synth_data is None:
+            synth_data = synthesize_data_from_label(gen_nn, num, gaussian_noise, i).float()
+            synth_labels = i * torch.ones(num).cuda().long()
+        else:
+            synth_data = torch.cat((synth_data, synthesize_data_from_label(low_zero_gen, 6000, gaussian_noise, i)), dim=0).cuda().float()
+            synth_labels = torch.cat((synth_labels, i * torch.ones(6000).cuda()), dim=0).cuda().long()
+    return synth_data, synth_labels
+        
+
 def synthesize_data_from_each_label(gen_nn, noise_function, n_classes):
     noise = noise_function(n_classes, gen_nn.num_input_features)
     labels = torch.arange(n_classes)
