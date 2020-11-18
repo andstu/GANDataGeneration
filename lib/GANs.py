@@ -179,7 +179,15 @@ class Conv_GeneratorNetwork(torch.nn.Module):
     def get_label_embeddings(self, labels):
         return self.label_embedding(labels).view(len(labels), 1, self.input_width, self.input_width)
 
-
+def get_visual_embeddings(gen_nn, n_classes):
+    labels = Variable(torch.arange(n_classes))
+    if torch.cuda.is_available():
+        labels = labels.cuda()
+    
+    embeddings = gen_nn.get_label_embeddings(labels).squeeze()
+    embeddings -= embeddings.min(1, keepdim=True)[0]
+    embeddings /= embeddings.max(1, keepdim=True)[0]
+    return embeddings
 
     
 # Training Functions

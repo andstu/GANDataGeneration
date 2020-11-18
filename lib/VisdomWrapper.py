@@ -104,6 +104,7 @@ class VisdomController():
             self.UpdateScatterPlot(data, plot_win, env)
 
     def PlotHeatMap(self, matrix, key, make_lower_triange):
+        print(matrix.shape)
         if not self.IsConnected():
             return
 
