@@ -102,7 +102,7 @@ class GeneratorNetwork(torch.nn.Module):
 
 
 class Conv_DiscriminatorNetwork(torch.nn.Module):
-    def __init__(self, num_input_features, num_classes):
+    def __init__(self, num_input_features, num_classes, loss_key):
         super(Conv_DiscriminatorNetwork, self).__init__()
         self.width = int(np.sqrt(num_input_features))
 
@@ -128,12 +128,18 @@ class Conv_DiscriminatorNetwork(torch.nn.Module):
 
         self.hidden0 = block(self.input_channels,64, 3, 1)
         self.hidden1 = block(64,32, 3, 1)
-
-        self.out = nn.Sequential(
-            nn.Flatten(),
-            nn.Linear(5*5*32, 1),
-            nn.Sigmoid()
-        )
+        
+        if(loss_key == 1):
+            self.out = nn.Sequential(
+                nn.Flatten(),
+                nn.Linear(5*5*32, 1)
+            )
+        else:
+            self.out = nn.Sequential(
+                nn.Flatten(),
+                nn.Linear(5*5*32, 1),
+                nn.Sigmoid()
+            )
     
     def forward(self, x, labels):
         # print(x.shape)
