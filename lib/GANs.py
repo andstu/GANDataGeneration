@@ -109,11 +109,11 @@ class Conv_DiscriminatorNetwork(torch.nn.Module):
         self.input_width = 7
         self.input_channels = 128
 
-        def block(input_channels, output_channels, filter_size, stride, pooling_size=2, pooling_stride=2):
+        def block(input_channels, output_channels, filter_size, stride, pooling_size=2, pooling_stride=1):
             return nn.Sequential(
-            nn.Conv2d(input_channels, output_channels, filter_size, stride=stride),
-            nn.LeakyReLU(0.1)
-            # nn.MaxPool2d(pooling_size, stride=pooling_stride)
+            nn.Conv2d(input_channels, output_channels, filter_size, stride=stride, padding=1),
+            nn.LeakyReLU(0.1),
+            nn.MaxPool2d(pooling_size, stride=pooling_stride)
         )  
    
         self.label_embedding = nn.Sequential(
@@ -126,12 +126,12 @@ class Conv_DiscriminatorNetwork(torch.nn.Module):
             nn.LeakyReLU(0.2)
         )
 
-        self.hidden0 = block(self.input_channels,32, 3, 1)
-        self.hidden1 = block(32,64, 3, 1)
+        self.hidden0 = block(self.input_channels,64, 3, 1)
+        self.hidden1 = block(64,32, 3, 1)
 
         self.out = nn.Sequential(
             nn.Flatten(),
-            nn.Linear(3*3*64, 1),
+            nn.Linear(5*5*32, 1),
             nn.Sigmoid()
         )
     
@@ -172,13 +172,15 @@ class Conv_GeneratorNetwork(torch.nn.Module):
 
         self.to_input_form = nn.Sequential(
             nn.Linear(num_input_features, self.input_channels * self.input_width ** 2),
-            nn.LeakyReLU(0.2)
+            nn.LeakyReLU(0.2),
+            nn.BatchNorm1d(self.input_channels * self.input_width ** 2)
         )
 
         self.hidden0 = nn.Sequential(
             nn.ConvTranspose2d(128,64,4,stride=2,padding=1),
             nn.LeakyReLU(0.1),
-            nn.BatchNorm2d(64)
+            nn.BatchNorm2d(64),
+            nn.Dropout(.4)
         )
 
         self.hidden1 = nn.Sequential(

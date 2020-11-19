@@ -41,7 +41,7 @@ class Noisifier():
             data = np.load(directory + filename)
 
             if(filename[2] == "v"):
-                scores = data[0:num_p_comp] / np.sum(data[0:num_p_comp])
+                scores = data[:num_p_comp+1] / np.sum(data[:num_p_comp+1])
                 probs = np.exp(scores) / np.sum(np.exp(scores))
                 pca_data[str(label) + "p"] = probs
             else:
@@ -56,8 +56,8 @@ class Noisifier():
         noise_matrix = torch.zeros_like(data)
         i = 0
         for l in labels:
-            noise = (scale * self.pca_data[l + "p"] * self.pca_data[l].T).T.sum(axis=0)
-            noise_matrix[i] += noise
+            noise = (scale * self.pca_data["{}p".format(l)] * self.pca_data[str(l)].T).T.sum(axis=0)
+            noise_matrix[i] += noise.squeeze()
             i += 1
 
         return data + noise_matrix
