@@ -74,8 +74,8 @@ class VisdomController():
         if not self.IsConnected():
             return
         
-        fake_data_0 = synthesize_data_from_label(gen_nn, batch_size, noise_function, class_to_mimic).detach().cpu().numpy()[:,f_idx_0]
-        fake_data_1 = synthesize_data_from_label(gen_nn, batch_size, noise_function, class_to_mimic).detach().cpu().numpy()[:,f_idx_1]
+        fake_data_0 = synthesize_data_from_label(gen_nn, batch_size, noise_function, class_to_mimic).view(batch_size,-1).detach().cpu().numpy()[:,f_idx_0]
+        fake_data_1 = synthesize_data_from_label(gen_nn, batch_size, noise_function, class_to_mimic).view(batch_size,-1).detach().cpu().numpy()[:,f_idx_1]
         data = np.array([fake_data_0,fake_data_1]).T
         
         plot_win = str(f_idx_0) + str(f_idx_1) + "_fake_comp_window"
