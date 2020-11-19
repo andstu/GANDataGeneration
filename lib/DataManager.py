@@ -2,11 +2,15 @@ import torch
 from torch.utils.data import DataLoader, WeightedRandomSampler, BatchSampler
 from torchvision import transforms, datasets
 import numpy as np
+import os
+from lib.DataCreationWrapper import *
+
 
 def get_unbalanced_mnist(class_weights, batch_size=100):
     compose = transforms.Compose(
         [
             transforms.ToTensor(),
+            # AddNormalNoise(0, .2),
             transforms.Normalize((.5,),(.5))
         ])
     path = "lib/datasets"
@@ -17,6 +21,47 @@ def get_unbalanced_mnist(class_weights, batch_size=100):
     batch_sampler = BatchSampler(sampler, batch_size, False)
 
     return DataLoader(mnist, batch_size=batch_size, sampler=sampler)
+
+# NOISE TRANSFORMS
+class AddNormalNoise(object):
+    def __init__(self, mean=0, std=1):
+        self.std = std
+        self.mean = mean
+
+    def __call__(self, sample):
+        return sample + torch.randn(sample.size()) * self.std + self.mean
+
+class Noisifier():
+    def __init__(self, num_p_comp = 2):
+        directory = "pca/"
+
+        pca_data = {}
+        for filename in os.listdir(directory):
+            label = filename[0]
+            data = np.load(directory + filename)
+
+            if(filename[2] == "v"):
+                scores = data[0:num_p_comp] / np.sum(data[0:num_p_comp])
+                probs = np.exp(scores) / np.sum(np.exp(scores))
+                pca_data[str(label) + "p"] = probs
+            else:
+                pca_data[str(label)] = data[0:num_p_comp,:]
+        self.pca_data = pca_data
+
+
+    def add_noise_random(self, data):
+        return data + gaussian_noise(data.size(0), data.size(1), mean = 0, stddev = 1)
+
+    def add_noise_directed(self, data, labels, scale = 1):
+        noise_matrix = torch.zeros_like(data)
+        i = 0
+        for l in labels:
+            noise = (scale * self.pca_data[l + "p"] * self.pca_data[l].T).T.sum(axis=0)
+            noise_matrix[i] += noise
+            i += 1
+
+        return data + noise_matrix
+
 
 def format_to_image(imgs, num_imgs, width):
     result = imgs.reshape(num_imgs,width,width)
