@@ -41,26 +41,40 @@ class Noisifier():
             data = np.load(directory + filename)
 
             if(filename[2] == "v"):
-                scores = data[:num_p_comp+1] / np.sum(data[:num_p_comp+1])
+                scores = data[:num_p_comp] / np.sum(data[:num_p_comp])
                 probs = np.exp(scores) / np.sum(np.exp(scores))
-                pca_data[str(label) + "p"] = probs
+                pca_data[str(label) + "p"] = torch.from_numpy(probs)
+                if torch.cuda.is_available():
+                    pca_data[str(label) + "p"].cuda()
             else:
-                pca_data[str(label)] = data[0:num_p_comp,:]
+                pca_data[str(label)] = torch.from_numpy(data[0:num_p_comp,:])
+                if torch.cuda.is_available():
+                    pca_data[str(label)].cuda()
         self.pca_data = pca_data
 
 
-    def add_noise_random(self, data):
-        return data + gaussian_noise(data.size(0), data.size(1), mean = 0, stddev = 1)
+    def add_noise_random(self, data, scale = 1):
+        noise = gaussian_noise(data.size(0), data.size(1)).cpu()
+        return data + noise
 
     def add_noise_directed(self, data, labels, scale = 1):
         noise_matrix = torch.zeros_like(data)
-        i = 0
-        for l in labels:
-            noise = (scale * self.pca_data["{}p".format(l)] * self.pca_data[str(l)].T).T.sum(axis=0)
-            noise_matrix[i] += noise.squeeze()
-            i += 1
 
-        return data + noise_matrix
+        for l in labels:
+            l = int(l)
+            probs = self.pca_data["{}p".format(l)]
+            pcmpt = (self.pca_data[str(l)].T * probs).T
+            pcmpt = pcmpt.sum(axis=0)
+            random_dirs = (-1 - 1) * torch.rand(pcmpt.shape) + 1
+
+            noise = scale * pcmpt
+            noise_matrix[labels == l] += noise.squeeze()
+
+        result = data + noise_matrix
+        torch.clamp(result, min=0, max=1)
+        # result -= result.min(1, keepdim=True)[0]
+        # result /= result.max(1, keepdim=True)[0]
+        return result
 
 
 def format_to_image(imgs, num_imgs, width):
