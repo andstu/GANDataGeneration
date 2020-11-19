@@ -10,6 +10,7 @@ def get_unbalanced_mnist(class_weights, batch_size=100):
     compose = transforms.Compose(
         [
             transforms.ToTensor(),
+            # AddNormalNoise(0, .2),
             transforms.Normalize((.5,),(.5))
         ])
     path = "lib/datasets"
@@ -28,7 +29,7 @@ class AddNormalNoise(object):
         self.mean = mean
 
     def __call__(self, sample):
-        return sample + sample.randn(sample.size()) * self.std + self.mean
+        return sample + torch.randn(sample.size()) * self.std + self.mean
 
 class Noisifier():
     def __init__(self, num_p_comp = 2):
