@@ -53,8 +53,9 @@ class Noisifier():
         self.pca_data = pca_data
 
 
-    def add_noise_random(self, data):
-        return data + gaussian_noise(data.size(0), data.size(1), mean = 0, stddev = 1)
+    def add_noise_random(self, data, scale = 1):
+        noise = gaussian_noise(data.size(0), data.size(1)).cpu()
+        return data + noise
 
     def add_noise_directed(self, data, labels, scale = 1):
         noise_matrix = torch.zeros_like(data)
@@ -70,8 +71,9 @@ class Noisifier():
             noise_matrix[labels == l] += noise.squeeze()
 
         result = data + noise_matrix
-        result -= result.min(1, keepdim=True)[0]
-        result /= result.max(1, keepdim=True)[0]
+        torch.clamp(result, min=0, max=1)
+        # result -= result.min(1, keepdim=True)[0]
+        # result /= result.max(1, keepdim=True)[0]
         return result
 
 
