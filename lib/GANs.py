@@ -95,6 +95,8 @@ class GeneratorNetwork(torch.nn.Module):
         x  = self.hidden1(x)
         x  = self.hidden2(x)
         x = self.out(x)
+        width = int(np.sqrt(self.num_output_features))
+        x = x.view(len(labels), 1, width, width)
         return x
 
 
@@ -308,8 +310,9 @@ def train_discriminator(discr_nn, discr_optimizer, loss, gen_nn, real_data, nois
 
 # Training Functions
 # https://github.com/EmilienDupont/wgan-gp/blob/50361ca47d260f9585f557b84c136c2e417030d1/training.py#L73
-def grad_penalty(reg_constant, discr_nn, real_data, fake_data, labels):    
+def grad_penalty(reg_constant, discr_nn, real_data, fake_data, labels):
     alpha = torch.rand_like(real_data)
+    # print(alpha.shape, real_data.shape, fake_data.shape)
     if torch.cuda.is_available():
         alpha = alpha.cuda()
     interpolated_data = alpha * real_data + (1 - alpha) * fake_data

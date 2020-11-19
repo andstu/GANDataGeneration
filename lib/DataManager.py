@@ -43,9 +43,13 @@ class Noisifier():
             if(filename[2] == "v"):
                 scores = data[:num_p_comp+1] / np.sum(data[:num_p_comp+1])
                 probs = np.exp(scores) / np.sum(np.exp(scores))
-                pca_data[str(label) + "p"] = probs
+                pca_data[str(label) + "p"] = torch.from_numpy(probs)
+                if torch.cuda.is_available():
+                    pca_data[str(label) + "p"].cuda()
             else:
-                pca_data[str(label)] = data[0:num_p_comp,:]
+                pca_data[str(label)] = torch.from_numpy(data[0:num_p_comp,:])
+                if torch.cuda.is_available():
+                    pca_data[str(label)].cuda()
         self.pca_data = pca_data
 
 
