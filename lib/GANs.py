@@ -238,7 +238,6 @@ class Conv_GeneratorNetwork(torch.nn.Module):
         
         self.out = nn.Sequential(
             nn.Conv2d(16,1,4,stride=2,padding=1),
-            nn.LeakyReLU(0.1),
             nn.Tanh()
         )
     
